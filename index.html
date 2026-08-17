@@ -149,36 +149,13 @@
 </head>
 <body>
 
-<header class="top">
-  <p class="eyebrow">Folha &amp; Pessoas</p>
-  <h1>Painel de Custos de RH</h1>
-  <p class="sub">Consolidado a partir das abas da planilha — headcount, custo por unidade e função, situação, aniversários, ASO e evolução por ano de admissão.</p>
-</header>
-
-<div class="wrap">
-
-  <div class="source-panel">
     <div class="row">
-      <input id="apiUrl" type="text" placeholder=https://script.google.com/macros/s/AKfycbzmrUNssGsVqvAgN23cZFlYnrVxlUApxOU4-yCHJufGSeuY6RAxy31JNhEZNwDbu9bXeQ/exec>
+      <!-- Coloque aqui a URL da sua API (Apps Script) -->
+      <input id="apiUrl" type="hidden" value="https://script.google.com/macros/s/AKfycbzmrUNssGsVqvAgN23cZFlYnrVxlUApxOU4-yCHJufGSeuY6RAxy31JNhEZNwDbu9bXeQ/exec">
       <button id="loadBtn">Carregar dados</button>
-      <button class="ghost" id="pasteToggle" type="button">Colar JSON manualmente</button>
-      <button class="toggle" id="helpToggle" type="button">como implantar a API ▾</button>
+      <span style="margin-left:auto; font-size:13px; color:var(--ink-soft);">Dados carregados automaticamente da API</span>
     </div>
-
-    <div class="paste-area" id="pasteArea">
-      <textarea id="pasteBox" placeholder='Cole aqui o JSON retornado pela API (abra a URL /exec no navegador, copie tudo e cole aqui)'></textarea>
-      <button style="margin-top:8px" id="usePastedBtn">Usar este JSON</button>
-    </div>
-
-    <div class="help" id="helpBox">
-      Na planilha: <b>Extensões → Apps Script</b>, cole o script <code>Code.gs</code> fornecido, depois
-      <b>Implantar → Nova implantação → Aplicativo da Web</b> (executar como "Eu", acesso "Qualquer pessoa").
-      <ol>
-        <li>Copie a URL gerada (termina em <code>/exec</code>).</li>
-        <li>Cole no campo acima e clique em <b>Carregar dados</b>.</li>
-        <li>Se o navegador bloquear por CORS, abra a URL diretamente numa aba, copie o JSON exibido e use "Colar JSON manualmente".</li>
-      </ol>
-    </div>
+    <!-- Ajuda removida: a aplicação carrega automaticamente a API configurada no HTML -->
 
     <div class="status-line" id="statusLine"></div>
   </div>
@@ -263,17 +240,7 @@ const fmtBRLdec = new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BR
 
 const PALETTE = ['#6a1f2e','#bd8b34','#2f6d4f','#a53a2e','#5b6b8c','#8a5a3c','#7d6a9e','#3c8a8a','#c46a4f','#9a9430'];
 
-document.getElementById('helpToggle').onclick = () => document.getElementById('helpBox').classList.toggle('open');
-document.getElementById('pasteToggle').onclick = () => document.getElementById('pasteArea').classList.toggle('open');
 document.getElementById('loadBtn').onclick = loadFromApi;
-document.getElementById('usePastedBtn').onclick = () => {
-  try {
-    const parsed = JSON.parse(document.getElementById('pasteBox').value);
-    onDataLoaded(parsed);
-  } catch (err) {
-    setStatus('JSON inválido: ' + err.message, true);
-  }
-};
 ['fUnidade','fFuncao','fSituacao','fAba'].forEach(id => {
   document.getElementById(id).addEventListener('change', renderAll);
 });
@@ -281,6 +248,17 @@ document.getElementById('clearFilters').onclick = () => {
   ['fUnidade','fFuncao','fSituacao','fAba'].forEach(id => document.getElementById(id).value = '');
   renderAll();
 };
+
+// Ao abrir a página, tenta carregar automaticamente a API definida no input hidden `apiUrl`.
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    const url = document.getElementById('apiUrl').value.trim();
+    if (url) loadFromApi();
+    else setStatus('API não configurada: coloque a URL em `apiUrl` no HTML.', true);
+  } catch (e) {
+    // elemento não encontrado ou outro erro — silencia
+  }
+});
 
 function setStatus(msg, isErr){
   const el = document.getElementById('statusLine');
